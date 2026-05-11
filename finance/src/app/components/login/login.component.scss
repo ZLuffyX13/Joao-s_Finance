@@ -97,6 +97,29 @@ h1 {
 	gap: 10px;
 }
 
+.form-feedback {
+	margin: 0;
+	font-size: 0.92rem;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.form-feedback--success {
+	color: #45e0a1;
+}
+
+.form-feedback--error {
+	color: #ff5c5c;
+}
+
+.field-error {
+	margin: -4px 0 0;
+	font-size: 0.86rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: #ff5c5c;
+}
+
 .split-fields {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
