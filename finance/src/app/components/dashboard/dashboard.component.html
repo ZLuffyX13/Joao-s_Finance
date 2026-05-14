@@ -1,0 +1,237 @@
+<div class="dashboard-container">
+	<nav class="sidebar">
+		<div class="sidebar-header">
+			<span class="sidebar-logo">Finance</span><span class="sidebar-accent">Flow</span>
+		</div>
+
+		<ul class="nav-menu">
+			<li class="nav-item">
+				<a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-chart-line"></i>
+					<span class="nav-label">Dashboard</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/budget" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-wallet"></i>
+					<span class="nav-label">Budget</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/goals" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-bullseye"></i>
+					<span class="nav-label">Goals</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/transactions" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-exchange-alt"></i>
+					<span class="nav-label">Transactions</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/reports" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-chart-bar"></i>
+					<span class="nav-label">Reports</span>
+				</a>
+			</li>
+		</ul>
+
+		<div class="sidebar-footer">
+			<div class="user-avatar" (click)="toggleUserMenu()" [title]="userInitials">
+				{{ userInitials }}
+			</div>
+			<div class="user-menu" *ngIf="isUserMenuOpen">
+				<button class="menu-item" (click)="navigateTo('/notifications')">
+					<i class="fas fa-bell"></i>
+					<span>Notifications</span>
+				</button>
+				<button class="menu-item" (click)="navigateTo('/settings')">
+					<i class="fas fa-cog"></i>
+					<span>Settings</span>
+				</button>
+				<div class="menu-divider"></div>
+				<button class="menu-item logout-btn" (click)="logout()">
+					<i class="fas fa-sign-out-alt"></i>
+					<span>Logout</span>
+				</button>
+			</div>
+		</div>
+	</nav>
+
+	<main class="main-content">
+		<header class="dashboard-header">
+			<div>
+				<h1 class="greeting">Good morning, {{ userName }}</h1>
+			</div>
+			<p class="date-info">Financial snapshot — May 2026</p>
+		</header>
+
+		<section class="metrics-grid">
+			<div class="metric-card">
+				<label class="metric-label">Net worth</label>
+				<div class="metric-value">R$24.310</div>
+				<div class="metric-change increase">+R$840 this month</div>
+			</div>
+
+			<div class="metric-card">
+				<label class="metric-label">Monthly income</label>
+				<div class="metric-value">R$5.000</div>
+				<div class="metric-change neutral">Received</div>
+			</div>
+
+			<div class="metric-card">
+				<label class="metric-label">Spent so far</label>
+				<div class="metric-value">R$2.194</div>
+				<div class="metric-change neutral">of R$3.200 budget</div>
+			</div>
+
+			<div class="metric-card">
+				<label class="metric-label">Savings rate</label>
+				<div class="metric-value">34%</div>
+				<div class="metric-change increase">+1.4% vs last month</div>
+			</div>
+		</section>
+
+		<div class="dashboard-grid">
+			<section class="budget-section">
+				<div class="section-header">
+					<h2>Budget by category</h2>
+					<a href="#" class="view-all">View all <i class="fas fa-arrow-right"></i></a>
+				</div>
+
+				<div class="budget-list">
+					<div class="budget-item">
+						<span class="budget-label">Housing</span>
+						<div class="budget-bar">
+							<div class="budget-progress" style="width: 75%; background: #ff6b6b;"></div>
+						</div>
+						<span class="budget-amount">R$1.200</span>
+					</div>
+
+					<div class="budget-item">
+						<span class="budget-label">Food</span>
+						<div class="budget-bar">
+							<div class="budget-progress" style="width: 55%; background: #51cf66;"></div>
+						</div>
+						<span class="budget-amount">R$440</span>
+					</div>
+
+					<div class="budget-item">
+						<span class="budget-label">Transport</span>
+						<div class="budget-bar">
+							<div class="budget-progress" style="width: 60%; background: #ffd43b;"></div>
+						</div>
+						<span class="budget-amount">R$190</span>
+					</div>
+
+					<div class="budget-item">
+						<span class="budget-label">Health</span>
+						<div class="budget-bar">
+							<div class="budget-progress" style="width: 35%; background: #748ec7;"></div>
+						</div>
+						<span class="budget-amount">R$82</span>
+					</div>
+
+					<div class="budget-item">
+						<span class="budget-label">Fun</span>
+						<div class="budget-bar">
+							<div class="budget-progress" style="width: 30%; background: #999;"></div>
+						</div>
+						<span class="budget-amount">R$80</span>
+					</div>
+				</div>
+			</section>
+
+			<section class="goals-section">
+				<div class="section-header">
+					<h2>Savings goals</h2>
+					<a href="#" class="view-all">Manage <i class="fas fa-arrow-right"></i></a>
+				</div>
+
+				<div class="goals-list">
+					<div class="goal-item">
+						<div class="goal-header">
+							<i class="fas fa-shield-alt goal-icon"></i>
+							<span class="goal-name">Emergency fund</span>
+						</div>
+						<div class="goal-progress">
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: 70%;"></div>
+							</div>
+							<span class="progress-text">70%</span>
+						</div>
+					</div>
+
+					<div class="goal-item">
+						<div class="goal-header">
+							<i class="fas fa-plane goal-icon"></i>
+							<span class="goal-name">Japan trip</span>
+						</div>
+						<div class="goal-progress">
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: 53%;"></div>
+							</div>
+							<span class="progress-text">53%</span>
+						</div>
+					</div>
+
+					<div class="goal-item">
+						<div class="goal-header">
+							<i class="fas fa-home goal-icon"></i>
+							<span class="goal-name">House deposit</span>
+						</div>
+						<div class="goal-progress">
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: 31%;"></div>
+							</div>
+							<span class="progress-text">31%</span>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<section class="transactions-section">
+			<div class="section-header">
+				<h2>Recent transactions</h2>
+				<a href="#" class="view-all">View all <i class="fas fa-arrow-right"></i></a>
+			</div>
+
+			<div class="transactions-list">
+				<div class="transaction-item">
+					<div class="transaction-icon income">
+						<i class="fas fa-money-bill-wave"></i>
+					</div>
+					<div class="transaction-details">
+						<p class="transaction-name">Salary</p>
+						<p class="transaction-date">Income · May 1</p>
+					</div>
+					<div class="transaction-amount income">+R$5.000</div>
+				</div>
+
+				<div class="transaction-item">
+					<div class="transaction-icon expense">
+						<i class="fas fa-home"></i>
+					</div>
+					<div class="transaction-details">
+						<p class="transaction-name">Rent</p>
+						<p class="transaction-date">Housing · May 1</p>
+					</div>
+					<div class="transaction-amount expense">-R$1.200</div>
+				</div>
+
+				<div class="transaction-item">
+					<div class="transaction-icon expense">
+						<i class="fas fa-shopping-cart"></i>
+					</div>
+					<div class="transaction-details">
+						<p class="transaction-name">Mercadão</p>
+						<p class="transaction-date">Food · May 3</p>
+					</div>
+					<div class="transaction-amount expense">-R$87</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</div>

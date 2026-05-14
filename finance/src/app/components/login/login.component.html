@@ -58,6 +58,14 @@
 					</div>
 
 					<button type="submit" class="submit-button" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>
+
+					<button type="button" class="google-button" (click)="loginWithGoogle()">
+						<svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<rect width="24" height="24" rx="6" fill="white"/>
+							<text x="12" y="17" font-size="14" font-weight="bold" text-anchor="middle" fill="#5B9EF5">G</text>
+						</svg>
+						<span>Continue with Google</span>
+					</button>
 				</form>
 			</ng-container>
 
@@ -111,6 +119,7 @@
 					<p class="helper-text">Use at least 8 characters with a mix of letters and numbers.</p>
 
 					<button type="submit" class="submit-button" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create free account' }}</button>
+
 
 					<p class="account-switch">
 						Already have an account?

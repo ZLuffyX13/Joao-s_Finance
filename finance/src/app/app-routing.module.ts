@@ -3,9 +3,23 @@ import { RouterModule, Routes } from '@angular/router';
 
 //Components
 import { LoginComponent } from './components/login/login.component';
-const routes: Routes = [
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { BudgetComponent } from './components/budget/budget.component';
+import { GoalsComponent } from './components/goals/goals.component';
+import { TransactionsComponent } from './components/transactions/transactions.component';
+import { ReportsComponent } from './components/reports/reports.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { SettingsComponent } from './components/settings/settings.component';
 
-  {path: '', component: LoginComponent}
+const routes: Routes = [
+  { path: '', component: LoginComponent },
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'budget', component: BudgetComponent },
+  { path: 'goals', component: GoalsComponent },
+  { path: 'transactions', component: TransactionsComponent },
+  { path: 'reports', component: ReportsComponent },
+  { path: 'notifications', component: NotificationsComponent },
+  { path: 'settings', component: SettingsComponent }
 ];
 
 @NgModule({

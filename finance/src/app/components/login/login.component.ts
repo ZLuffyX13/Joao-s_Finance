@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService, AuthResponse } from '../../services/auth.service';
@@ -13,6 +14,7 @@ type AuthMode = 'signIn' | 'createAccount';
 })
 export class LoginComponent {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly router = inject(Router);
   authMode: AuthMode = 'signIn';
   loading = false;
   errorMessage = '';
@@ -37,6 +39,8 @@ export class LoginComponent {
     this.authMode = mode;
     this.errorMessage = '';
     this.successMessage = '';
+    this.signInForm.reset();
+    this.signUpForm.reset();
   }
 
   submitSignIn(): void {
@@ -97,6 +101,13 @@ export class LoginComponent {
       });
   }
 
+  loginWithGoogle(): void {
+    console.log('Google login initiated');
+    this.errorMessage = '';
+    this.successMessage = '';
+    // TODO: Implementar autenticação com Google OAuth
+  }
+
   get signInControls() {
     return this.signInForm.controls;
   }
@@ -118,6 +129,11 @@ export class LoginComponent {
     this.errorMessage = '';
     this.signInForm.reset();
     this.signUpForm.reset();
+
+    // Navega para dashboard após login bem-sucedido
+    setTimeout(() => {
+      this.router.navigate(['/dashboard']);
+    }, 500);
   }
 
 }
