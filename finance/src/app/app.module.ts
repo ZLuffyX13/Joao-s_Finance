@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -15,6 +15,7 @@ import { TransactionsComponent } from './components/transactions/transactions.co
 import { ReportsComponent } from './components/reports/reports.component';
 import { NotificationsComponent } from './components/notifications/notifications.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { RecuperarSenhaComponent } from './components/recuperar-senha/recuperar-senha.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -25,12 +26,14 @@ import { SettingsComponent } from './components/settings/settings.component';
     TransactionsComponent,
     ReportsComponent,
     NotificationsComponent,
-    SettingsComponent
+    SettingsComponent,
+    RecuperarSenhaComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     ReactiveFormsModule,
+    FormsModule,
     AppRoutingModule
   ],
   providers: [],

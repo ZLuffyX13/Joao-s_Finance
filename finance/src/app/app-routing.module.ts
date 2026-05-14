@@ -10,9 +10,11 @@ import { TransactionsComponent } from './components/transactions/transactions.co
 import { ReportsComponent } from './components/reports/reports.component';
 import { NotificationsComponent } from './components/notifications/notifications.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { RecuperarSenhaComponent } from './components/recuperar-senha/recuperar-senha.component';
 
 const routes: Routes = [
   { path: '', component: LoginComponent },
+  { path: 'recuperar-senha', component: RecuperarSenhaComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'budget', component: BudgetComponent },
   { path: 'goals', component: GoalsComponent },

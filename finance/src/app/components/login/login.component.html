@@ -36,14 +36,14 @@
 
 					<label for="signin-email">Email</label>
 					<div class="input-shell">
-						<span class="input-icon" aria-hidden="true">&#64;</span>
+						<i class="fas fa-envelope input-icon" aria-hidden="true"></i>
 						<input id="signin-email" type="email" formControlName="email" placeholder="you@email.com" autocomplete="email" />
 					</div>
 					<p class="field-error" *ngIf="signInControls.email.touched && signInControls.email.invalid">Enter a valid email address.</p>
 
 					<label for="signin-password">Password</label>
 					<div class="input-shell">
-						<span class="input-icon" aria-hidden="true">*</span>
+						<span class="input-icon" aria-hidden="true">#</span>
 						<input id="signin-password" type="password" formControlName="password" placeholder="Enter your password" autocomplete="current-password" />
 					</div>
 					<p class="field-error" *ngIf="signInControls.password.touched && signInControls.password.invalid">Password must have at least 8 characters.</p>
@@ -54,7 +54,7 @@
 							<span>Remember me</span>
 						</label>
 
-						<a href="#" class="forgot-password">Forgot password?</a>
+						<a routerLink="/recuperar-senha" class="forgot-password">Forgot password?</a>
 					</div>
 
 					<button type="submit" class="submit-button" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>

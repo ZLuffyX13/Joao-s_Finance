@@ -1,0 +1,47 @@
+<div class="recovery-page">
+	<section class="recovery-card" aria-label="FinanceFlow password recovery">
+		<div class="recovery-panel">
+			<div class="brand">
+				<span class="brand-mark">Finance</span><span class="brand-accent">Flow</span>
+			</div>
+
+			<h1>Reset your password</h1>
+			<p class="subtitle">Enter your email to receive recovery instructions</p>
+
+			<form class="recovery-form" (ngSubmit)="submitRecovery()">
+				<p class="form-feedback form-feedback--success" *ngIf="successMessage">{{ successMessage }}</p>
+				<p class="form-feedback form-feedback--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+				<label for="recovery-email">Email</label>
+				<div class="input-shell">
+					<i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+					<input 
+						id="recovery-email" 
+						type="email" 
+						[(ngModel)]="email" 
+						name="email"
+						placeholder="you@email.com" 
+						autocomplete="email"
+						(blur)="validateEmail()" />
+				</div>
+				<p class="field-error" *ngIf="emailTouched && !isValidEmail()">Enter a valid email address.</p>
+
+				<button type="submit" class="submit-button" [disabled]="loading || !isValidEmail()">
+					{{ loading ? 'Sending...' : 'Send recovery email' }}
+				</button>
+
+				<div class="recovery-footer">
+					<p class="recovery-text">Remembered your password?</p>
+					<button type="button" class="back-button" (click)="goBack()">Back to Sign in</button>
+				</div>
+			</form>
+		</div>
+
+		<div class="recovery-visual">
+			<div class="orb orb--one"></div>
+			<div class="orb orb--two"></div>
+			<div class="shape shape--circle"></div>
+			<div class="shape shape--square"></div>
+		</div>
+	</section>
+</div>
