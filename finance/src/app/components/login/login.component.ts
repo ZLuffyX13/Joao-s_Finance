@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -12,7 +12,7 @@ type AuthMode = 'signIn' | 'createAccount';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   authMode: AuthMode = 'signIn';
@@ -22,7 +22,8 @@ export class LoginComponent {
 
   readonly signInForm = this.formBuilder.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    rememberMe: [false]
   });
 
   readonly signUpForm = this.formBuilder.group({
@@ -35,12 +36,27 @@ export class LoginComponent {
 
   constructor(private readonly authService: AuthService) {}
 
+  ngOnInit(): void {
+    this.loadRememberedEmail();
+  }
+
+  private loadRememberedEmail(): void {
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    if (rememberedEmail) {
+      this.signInForm.patchValue({
+        email: rememberedEmail,
+        rememberMe: true
+      });
+    }
+  }
+
   setAuthMode(mode: AuthMode): void {
     this.authMode = mode;
     this.errorMessage = '';
     this.successMessage = '';
     this.signInForm.reset();
     this.signUpForm.reset();
+    this.loadRememberedEmail();
   }
 
   submitSignIn(): void {
@@ -57,6 +73,13 @@ export class LoginComponent {
       email: this.signInForm.value.email ?? '',
       password: this.signInForm.value.password ?? ''
     };
+
+    const rememberMe = this.signInForm.value.rememberMe;
+    if (rememberMe && payload.email) {
+      localStorage.setItem('remembered_email', payload.email);
+    } else {
+      localStorage.removeItem('remembered_email');
+    }
 
     this.authService
       .signIn(payload)
@@ -135,5 +158,4 @@ export class LoginComponent {
       this.router.navigate(['/dashboard']);
     }, 500);
   }
-
 }

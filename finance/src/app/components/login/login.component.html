@@ -50,8 +50,8 @@
 
 					<div class="form-meta">
 						<label class="remember-me">
-							<input type="checkbox" />
-							<span>Keep me signed in for 30 days</span>
+							<input type="checkbox" formControlName="rememberMe" />
+							<span>Remember me</span>
 						</label>
 
 						<a href="#" class="forgot-password">Forgot password?</a>
@@ -118,7 +118,7 @@
 
 					<p class="helper-text">Use at least 8 characters with a mix of letters and numbers.</p>
 
-					<button type="submit" class="submit-button" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create free account' }}</button>
+					<button type="submit" class="submit-button" [disabled]="loading">{{ loading ? 'Creating account...' : 'Create account' }}</button>
 
 
 					<p class="account-switch">
