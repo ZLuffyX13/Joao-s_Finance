@@ -1,7 +1,10 @@
-<div class="dashboard-container">
-	<nav class="sidebar">
+<div class="container" [class.collapsed]="!isSidebarOpen">
+	<nav class="sidebar" [class.collapsed]="!isSidebarOpen">
 		<div class="sidebar-header">
 			<span class="sidebar-logo">Finance</span><span class="sidebar-accent">Flow</span>
+			<button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+				<i class="fas fa-bars"></i>
+			</button>
 		</div>
 
 		<ul class="nav-menu">

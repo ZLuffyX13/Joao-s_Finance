@@ -10,6 +10,7 @@ export class DashboardComponent implements OnInit {
   userInitials: string = 'AA';
   userName: string = 'User';
   isUserMenuOpen = false;
+  isSidebarOpen = false;
 
   constructor(private readonly router: Router) {}
 
@@ -36,6 +37,10 @@ export class DashboardComponent implements OnInit {
   navigateTo(route: string): void {
     this.router.navigate([route]);
     this.closeUserMenu();
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
   }
 
   logout(): void {
