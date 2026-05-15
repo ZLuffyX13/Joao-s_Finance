@@ -439,6 +439,45 @@
 						}
 					}
 				}
+
+				&.actions {
+					display: flex;
+					gap: 8px;
+					justify-content: center;
+
+					.action-btn {
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						width: 32px;
+						height: 32px;
+						border: none;
+						border-radius: 6px;
+						background: rgba(69, 224, 161, 0.1);
+						color: #45e0a1;
+						cursor: pointer;
+						font-size: 0.9rem;
+						transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+						&:hover {
+							background: rgba(69, 224, 161, 0.2);
+							transform: scale(1.1);
+						}
+
+						&.delete-btn {
+							background: rgba(239, 68, 68, 0.1);
+							color: #ff6b6b;
+
+							&:hover {
+								background: rgba(239, 68, 68, 0.2);
+							}
+						}
+
+						&:active {
+							transform: scale(0.95);
+						}
+					}
+				}
 			}
 		}
 	}

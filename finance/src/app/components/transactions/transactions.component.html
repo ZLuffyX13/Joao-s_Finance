@@ -116,6 +116,7 @@
 						<th>Type</th>
 						<th>Amount</th>
 						<th>Status</th>
+						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -139,6 +140,14 @@
 							<span class="status-badge" [ngClass]="transaction.status.toLowerCase()">
 								{{ transaction.status }}
 							</span>
+						</td>
+						<td class="actions">
+							<button class="action-btn edit-btn" (click)="openEditForm(transaction)" title="Edit">
+								<i class="fas fa-edit"></i>
+							</button>
+							<button class="action-btn delete-btn" (click)="deleteTransaction(transaction.id)" title="Delete">
+								<i class="fas fa-trash"></i>
+							</button>
 						</td>
 					</tr>
 				</tbody>
@@ -243,6 +252,108 @@
 				<div class="form-actions">
 					<button type="button" class="btn-cancel" (click)="closeAddForm()">Cancel</button>
 					<button type="submit" class="btn-submit" [disabled]="transactionForm.invalid">Add Transaction</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Edit Transaction Modal -->
+	<div class="modal-overlay" *ngIf="showEditForm" (click)="closeEditForm()">
+		<div class="modal-content" (click)="$event.stopPropagation()">
+			<div class="modal-header">
+				<h2>Edit Transaction</h2>
+				<button class="close-btn" (click)="closeEditForm()">
+					<i class="fas fa-times"></i>
+				</button>
+			</div>
+
+			<form [formGroup]="editTransactionForm" (ngSubmit)="editTransaction()" class="add-form">
+				<div class="form-group">
+					<label for="edit-description">Description *</label>
+					<input 
+						type="text" 
+						id="edit-description" 
+						formControlName="description" 
+						placeholder="e.g., Grocery shopping"
+						class="form-input">
+					<span class="error-msg" *ngIf="editTransactionForm.get('description')?.invalid && editTransactionForm.get('description')?.touched">
+						Description is required (min 3 characters)
+					</span>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-category">Category *</label>
+					<input 
+						type="text" 
+						id="edit-category" 
+						formControlName="category" 
+						placeholder="Type or select a category"
+						list="editCategoryList"
+						class="form-input">
+					<datalist id="editCategoryList">
+						<option *ngFor="let cat of categories.slice(1)" [value]="cat"></option>
+					</datalist>
+					<span class="error-msg" *ngIf="editTransactionForm.get('category')?.invalid && editTransactionForm.get('category')?.touched">
+						Category is required
+					</span>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="edit-date">Date *</label>
+						<input 
+							type="date" 
+							id="edit-date" 
+							formControlName="date" 
+							class="form-input">
+						<span class="error-msg" *ngIf="editTransactionForm.get('date')?.invalid && editTransactionForm.get('date')?.touched">
+							Date is required
+						</span>
+					</div>
+
+					<div class="form-group">
+						<label for="edit-amount">Amount *</label>
+						<input 
+							type="number" 
+							id="edit-amount" 
+							formControlName="amount" 
+							placeholder="0.00"
+							step="0.01"
+							class="form-input">
+						<span class="error-msg" *ngIf="editTransactionForm.get('amount')?.invalid && editTransactionForm.get('amount')?.touched">
+							Valid amount required
+						</span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-status">Status *</label>
+					<select id="edit-status" formControlName="status" class="form-input">
+						<option value="Paid">Paid</option>
+						<option value="Paying">Paying</option>
+					</select>
+					<span class="error-msg" *ngIf="editTransactionForm.get('status')?.invalid && editTransactionForm.get('status')?.touched">
+						Status is required
+					</span>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-type">Type *</label>
+					<div class="type-selector">
+						<label class="type-option">
+							<input type="radio" value="Credit" formControlName="type">
+							<span>Credit</span>
+						</label>
+						<label class="type-option">
+							<input type="radio" value="Debit" formControlName="type">
+							<span>Debit</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="button" class="btn-cancel" (click)="closeEditForm()">Cancel</button>
+					<button type="submit" class="btn-submit" [disabled]="editTransactionForm.invalid">Update Transaction</button>
 				</div>
 			</form>
 		</div>

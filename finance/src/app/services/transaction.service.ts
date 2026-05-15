@@ -8,7 +8,7 @@ interface CreateTransactionRequest {
   category: string;
   amount: number;
   type: 'Credit' | 'Debit';
-  status: 'Confirmed' | 'Pending';
+  status: 'Paying' | 'Paid';
   date: string;
 }
 
@@ -68,5 +68,15 @@ export class TransactionService {
     }
 
     return this.http.get<TransactionsListResponse>(url, { headers });
+  }
+
+  updateTransaction(id: string, data: Partial<CreateTransactionRequest>): Observable<TransactionResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http.put<TransactionResponse>(`${this.apiUrl}/${id}`, data, { headers });
+  }
+
+  deleteTransaction(id: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
   }
 }

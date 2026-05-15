@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TransactionService } from '../../services/transaction.service';
 
 interface Transaction {
-  id: number;
+  id: string;
   description: string;
   category: string;
   date: string;
@@ -26,11 +26,14 @@ export class TransactionsComponent implements OnInit {
     isUserMenuOpen = false;
     isSidebarOpen = false;
     showAddForm = false;
+    showEditForm = false;
+    editingTransactionId: string | null = null;
     searchQuery = '';
     selectedCategory = 'All categories';
     selectedType: 'Credit' | 'Debit' = 'Credit';
     isAnimating = false;
     transactionForm: FormGroup;
+    editTransactionForm: FormGroup;
 
     transactions: Transaction[] = [];
 
@@ -58,6 +61,15 @@ export class TransactionsComponent implements OnInit {
         type: ['Credit', Validators.required],
         status: ['Paid', Validators.required]
       });
+
+      this.editTransactionForm = this.fb.group({
+        description: ['', [Validators.required, Validators.minLength(3)]],
+        category: ['', Validators.required],
+        date: ['', Validators.required],
+        amount: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d{1,2})?$/)]],
+        type: ['Credit', Validators.required],
+        status: ['Paid', Validators.required]
+      });
     }
   
     ngOnInit(): void {
@@ -74,6 +86,27 @@ export class TransactionsComponent implements OnInit {
   closeAddForm(): void {
     this.showAddForm = false;
     this.transactionForm.reset({ status: 'Paid', type: 'Credit' });
+    document.body.style.overflow = 'auto';
+  }
+
+  openEditForm(transaction: Transaction): void {
+    this.editingTransactionId = transaction.id;
+    this.editTransactionForm.patchValue({
+      description: transaction.description,
+      category: transaction.category,
+      date: transaction.date,
+      amount: transaction.amount,
+      type: transaction.type,
+      status: transaction.status
+    });
+    this.showEditForm = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeEditForm(): void {
+    this.showEditForm = false;
+    this.editingTransactionId = null;
+    this.editTransactionForm.reset({ status: 'Paid', type: 'Credit' });
     document.body.style.overflow = 'auto';
   }
 
@@ -114,6 +147,60 @@ export class TransactionsComponent implements OnInit {
     }
   }
 
+  editTransaction(): void {
+    if (this.editTransactionForm.valid && this.editingTransactionId) {
+      const formValue = this.editTransactionForm.value;
+      
+      const dateValue = formValue.date instanceof Date 
+        ? formValue.date.toISOString().split('T')[0] 
+        : formValue.date;
+
+      const transactionData = {
+        description: formValue.description,
+        category: formValue.category,
+        amount: parseFloat(formValue.amount),
+        type: formValue.type,
+        status: formValue.status,
+        date: dateValue
+      };
+
+      this.transactionService.updateTransaction(this.editingTransactionId, transactionData).subscribe({
+        next: (response) => {
+          console.log('Transaction updated successfully:', response);
+          const index = this.transactions.findIndex(t => t.id.toString() === this.editingTransactionId);
+          if (index > -1) {
+            this.transactions[index] = {
+              id: this.editingTransactionId as any,
+              ...transactionData,
+              date: new Date(transactionData.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+              categoryColor: this.getCategoryColor(transactionData.category)
+            };
+          }
+          this.closeEditForm();
+        },
+        error: (error) => {
+          console.error('Error updating transaction:', error);
+          alert(`Error: ${error.error?.message || 'Failed to update transaction'}`);
+        }
+      });
+    }
+  }
+
+  deleteTransaction(transactionId: string): void {
+    if (confirm('Are you sure you want to delete this transaction?')) {
+      this.transactionService.deleteTransaction(transactionId.toString()).subscribe({
+        next: (response) => {
+          console.log('Transaction deleted successfully:', response);
+          this.transactions = this.transactions.filter(t => t.id !== transactionId);
+        },
+        error: (error) => {
+          console.error('Error deleting transaction:', error);
+          alert(`Error: ${error.error?.message || 'Failed to delete transaction'}`);
+        }
+      });
+    }
+  }
+
   getCategoryColor(category: string): string {
     if (!this.categoryColorMap[category]) {
       // Generate random color for new categories
@@ -143,7 +230,7 @@ export class TransactionsComponent implements OnInit {
     }
   }
 
-  trackByTransactionId(index: number, transaction: Transaction): number {
+  trackByTransactionId(index: number, transaction: Transaction): string {
     return transaction.id;
   }
   
