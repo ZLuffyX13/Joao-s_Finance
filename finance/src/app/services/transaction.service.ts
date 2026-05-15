@@ -10,11 +10,13 @@ interface CreateTransactionRequest {
   type: 'Credit' | 'Debit';
   status: 'Paying' | 'Paid';
   date: string;
+  installments?: number;
 }
 
 interface TransactionResponse {
   message: string;
   transaction: any;
+  transactions?: any[];
 }
 
 interface TransactionsListResponse {
@@ -73,6 +75,11 @@ export class TransactionService {
   updateTransaction(id: string, data: Partial<CreateTransactionRequest>): Observable<TransactionResponse> {
     const headers = this.getAuthHeaders();
     return this.http.put<TransactionResponse>(`${this.apiUrl}/${id}`, data, { headers });
+  }
+
+  payInstallmentEarly(id: string): Observable<TransactionResponse> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<TransactionResponse>(`${this.apiUrl}/${id}/pay-early`, {}, { headers });
   }
 
   deleteTransaction(id: string): Observable<any> {

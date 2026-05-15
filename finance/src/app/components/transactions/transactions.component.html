@@ -121,7 +121,12 @@
 				</thead>
 				<tbody>
 					<tr *ngFor="let transaction of filteredTransactions; trackBy: trackByTransactionId" class="transaction-row">
-						<td class="description">{{ transaction.description }}</td>
+						<td class="description">
+							<div>{{ transaction.description }}</div>
+							<div class="installment-label" *ngIf="transaction.installments && transaction.installments > 1">
+								Parcel {{ transaction.installmentNumber }} of {{ transaction.installments }}
+							</div>
+						</td>
 						<td class="category">
 							<span class="category-badge" [style.background-color]="transaction.categoryColor + '20'" [style.color]="transaction.categoryColor">
 								{{ transaction.category }}
@@ -142,6 +147,14 @@
 							</span>
 						</td>
 						<td class="actions">
+							<button
+								*ngIf="transaction.installments && transaction.installments > 1 && transaction.status === 'Paying'"
+								class="action-btn pay-btn"
+								(click)="payInstallmentEarly(transaction.id)"
+								title="Pay early"
+							>
+								<i class="fas fa-check-double"></i>
+							</button>
 							<button class="action-btn edit-btn" (click)="openEditForm(transaction)" title="Edit">
 								<i class="fas fa-edit"></i>
 							</button>
@@ -233,6 +246,22 @@
 					<span class="error-msg" *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
 						Status is required
 					</span>
+				</div>
+
+				<div class="form-group" *ngIf="transactionForm.get('status')?.value === 'Paying'">
+					<label for="installments">Installments *</label>
+					<input
+						type="number"
+						id="installments"
+						formControlName="installments"
+						min="1"
+						max="60"
+						placeholder="e.g., 6"
+						class="form-input">
+					<span class="error-msg" *ngIf="transactionForm.get('installments')?.invalid && transactionForm.get('installments')?.touched">
+						Installments must be at least 1
+					</span>
+					<p class="helper-text installment-helper">This transaction will appear again in the next months.</p>
 				</div>
 
 				<div class="form-group">

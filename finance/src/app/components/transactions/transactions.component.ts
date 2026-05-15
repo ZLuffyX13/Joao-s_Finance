@@ -8,9 +8,13 @@ interface Transaction {
   description: string;
   category: string;
   date: string;
+  rawDate?: string;
   amount: number;
   status: 'Paying' | 'Paid';
   type: 'Credit' | 'Debit';
+  installments?: number;
+  installmentNumber?: number;
+  installmentGroupId?: string;
   categoryColor?: string;
 }
 
@@ -59,7 +63,8 @@ export class TransactionsComponent implements OnInit {
         date: ['', Validators.required],
         amount: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d{1,2})?$/)]],
         type: ['Credit', Validators.required],
-        status: ['Paid', Validators.required]
+        status: ['Paid', Validators.required],
+        installments: [1, [Validators.required, Validators.min(1), Validators.max(60)]]
       });
 
       this.editTransactionForm = this.fb.group({
@@ -94,7 +99,7 @@ export class TransactionsComponent implements OnInit {
     this.editTransactionForm.patchValue({
       description: transaction.description,
       category: transaction.category,
-      date: transaction.date,
+      date: this.toDateInputValue(transaction.rawDate || transaction.date),
       amount: transaction.amount,
       type: transaction.type,
       status: transaction.status
@@ -125,18 +130,14 @@ export class TransactionsComponent implements OnInit {
         amount: parseFloat(formValue.amount),
         type: formValue.type,
         status: formValue.status,
-        date: dateValue
+        date: dateValue,
+        installments: formValue.status === 'Paying' ? Number(formValue.installments || 1) : 1
       };
 
       this.transactionService.createTransaction(transactionData).subscribe({
         next: (response) => {
           console.log('Transaction created successfully:', response);
-          const newTransaction: Transaction = {
-            id: response.transaction._id,
-            ...transactionData,
-            categoryColor: this.getCategoryColor(transactionData.category)
-          };
-          this.transactions.unshift(newTransaction);
+          this.loadTransactions();
           this.closeAddForm();
         },
         error: (error) => {
@@ -167,15 +168,7 @@ export class TransactionsComponent implements OnInit {
       this.transactionService.updateTransaction(this.editingTransactionId, transactionData).subscribe({
         next: (response) => {
           console.log('Transaction updated successfully:', response);
-          const index = this.transactions.findIndex(t => t.id.toString() === this.editingTransactionId);
-          if (index > -1) {
-            this.transactions[index] = {
-              id: this.editingTransactionId as any,
-              ...transactionData,
-              date: new Date(transactionData.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-              categoryColor: this.getCategoryColor(transactionData.category)
-            };
-          }
+          this.loadTransactions();
           this.closeEditForm();
         },
         error: (error) => {
@@ -196,6 +189,21 @@ export class TransactionsComponent implements OnInit {
         error: (error) => {
           console.error('Error deleting transaction:', error);
           alert(`Error: ${error.error?.message || 'Failed to delete transaction'}`);
+        }
+      });
+    }
+  }
+
+  payInstallmentEarly(transactionId: string): void {
+    if (confirm('Pay this installment early and remove the future installments?')) {
+      this.transactionService.payInstallmentEarly(transactionId).subscribe({
+        next: (response) => {
+          console.log('Installment paid early successfully:', response);
+          this.loadTransactions();
+        },
+        error: (error) => {
+          console.error('Error paying installment early:', error);
+          alert(`Error: ${error.error?.message || 'Failed to pay installment early'}`);
         }
       });
     }
@@ -288,9 +296,13 @@ export class TransactionsComponent implements OnInit {
             description: t.description,
             category: t.category,
             date: new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            rawDate: t.date,
             amount: t.amount,
             status: t.status,
             type: t.type,
+            installments: t.installments,
+            installmentNumber: t.installmentNumber,
+            installmentGroupId: t.installmentGroupId,
             categoryColor: this.getCategoryColor(t.category)
           }));
         },
@@ -317,5 +329,15 @@ export class TransactionsComponent implements OnInit {
           this.userCurrency = 'BRL';
         }
       }
+    }
+
+    private toDateInputValue(dateValue: string): string {
+      const date = new Date(dateValue);
+
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+
+      return date.toISOString().split('T')[0];
     }
 }

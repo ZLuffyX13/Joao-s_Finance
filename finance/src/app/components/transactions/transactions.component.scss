@@ -169,8 +169,8 @@
 .category-filter {
 	width: 100%;
 	padding: 11px 36px 11px 14px;
-	background: rgba(245, 245, 245, 0.08);
-	border: 1px solid rgba(245, 245, 245, 0.12);
+	background: #121212;
+	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: 8px;
 	color: #f5f5f5;
 	font-size: 0.9rem;
@@ -182,22 +182,33 @@
 	-moz-appearance: none;
 
 	&:hover {
-		background: rgba(245, 245, 245, 0.12);
-		border-color: rgba(69, 224, 161, 0.3);
+		background: #121212;
+		border-color: #45e0a1;
 	}
 
 	&:focus {
 		outline: none;
-		background: rgba(245, 245, 245, 0.12);
-		border-color: rgba(69, 224, 161, 0.5);
+		background: #121212;
+		border-color: #45e0a1;
 		box-shadow: 0 0 12px rgba(69, 224, 161, 0.2);
 		animation: categoryPulse 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
+	&::selection {
+		background: #45e0a1;
+		color: #000;
+	}
+
 	option {
-		background: #1a1a1a;
+		background: #121212;
 		color: #f5f5f5;
 		padding: 8px;
+
+		&:checked,
+		&:hover {
+			background: #45e0a1 linear-gradient(0deg, #45e0a1 0%, #45e0a1 100%);
+			color: #000;
+		}
 	}
 
 	@media (max-width: 768px) {
@@ -366,6 +377,13 @@
 					color: #f5f5f5;
 				}
 
+				.installment-label {
+					margin-top: 4px;
+					font-size: 0.78rem;
+					font-weight: 600;
+					color: rgba(245, 245, 245, 0.56);
+				}
+
 				&.category {
 					.category-badge {
 						display: inline-block;
@@ -427,15 +445,15 @@
 						border: 1px solid;
 
 						&.credit {
-							background: rgba(69, 224, 161, 0.15);
-							color: #45e0a1;
-							border-color: #45e0a1;
-						}
-
-						&.debit {
 							background: rgba(239, 68, 68, 0.15);
 							color: #ff6b6b;
 							border-color: #ff6b6b;
+						}
+
+						&.debit {
+							background: rgba(69, 224, 161, 0.15);
+							color: #45e0a1;
+							border-color: #45e0a1;
 						}
 					}
 				}
@@ -470,6 +488,15 @@
 
 							&:hover {
 								background: rgba(239, 68, 68, 0.2);
+							}
+						}
+
+						&.pay-btn {
+							background: rgba(59, 130, 246, 0.12);
+							color: #60a5fa;
+
+							&:hover {
+								background: rgba(59, 130, 246, 0.22);
 							}
 						}
 
@@ -587,8 +614,8 @@
 
 	.form-input {
 		padding: 11px 14px;
-		background: rgba(245, 245, 245, 0.06);
-		border: 1px solid rgba(245, 245, 245, 0.12);
+		background: #121212;
+		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 8px;
 		color: #f5f5f5;
 		font-size: 0.9rem;
@@ -603,14 +630,20 @@
 
 		&:focus {
 			outline: none;
-			background: rgba(245, 245, 245, 0.1);
-			border-color: rgba(69, 224, 161, 0.5);
+			background: #121212;
+			border-color: #45e0a1;
 			box-shadow: 0 0 12px rgba(69, 224, 161, 0.2);
 		}
 
 		option {
-			background: #1a1a1a;
+			background: #121212;
 			color: #f5f5f5;
+
+			&:checked,
+			&:hover {
+				background: #45e0a1 linear-gradient(0deg, #45e0a1 0%, #45e0a1 100%);
+				color: #000;
+			}
 		}
 
 		/* Style number input spinner buttons */
@@ -650,6 +683,10 @@
 		&.show {
 			display: block;
 		}
+	}
+
+	.helper-text.installment-helper {
+		margin-top: 0.35rem;
 	}
 }
 
