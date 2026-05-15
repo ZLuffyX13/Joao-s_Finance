@@ -11,13 +11,15 @@ export class BudgetComponent {
   userName: string = 'User';
   isUserMenuOpen = false;
   isSidebarOpen = false;
+  currentMonth: string = '';
+  daysRemaining: number = 0;
 
   constructor(private readonly router: Router) {}
 
   ngOnInit(): void {
     this.loadUserData();
     this.loadSidebarState();
-
+    this.calculateMonthInfo();
   }
 
   toggleUserMenu(): void {
@@ -77,5 +79,21 @@ export class BudgetComponent {
         this.userName = 'User';
       }
     }
+  }
+
+  private calculateMonthInfo(): void {
+    const today = new Date();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const year = today.getFullYear();
+    const monthIndex = today.getMonth();
+    
+    this.currentMonth = monthNames[monthIndex];
+    
+    // Get the last day of the current month
+    const lastDayOfMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const currentDay = today.getDate();
+    
+    // Calculate remaining days (including today)
+    this.daysRemaining = lastDayOfMonth - currentDay + 1;
   }
 }

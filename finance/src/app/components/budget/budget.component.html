@@ -61,3 +61,115 @@
 			</div>
 		</div>
 	</nav>
+
+	<main class="main-content">
+		<header class="budget-header">
+			<div>
+				<h1 class="page-title">Budget Tracker</h1>
+				<p class="subtitle">{{ currentMonth }} 2026 — {{ daysRemaining }} days remaining</p>
+			</div>
+			<button class="edit-button">
+				<i class="fas fa-edit"></i> Edit budget
+			</button>
+		</header>
+
+		<section class="budget-stats">
+			<div class="stat-card">
+				<label class="stat-label">Total budget</label>
+				<div class="stat-value">R$3.200</div>
+			</div>
+			<div class="stat-card">
+				<label class="stat-label">Spent</label>
+				<div class="stat-value">R$2.194</div>
+			</div>
+			<div class="stat-card">
+				<label class="stat-label">Remaining</label>
+				<div class="stat-value positive">R$1.006</div>
+			</div>
+			<div class="stat-card">
+				<label class="stat-label">On track</label>
+				<div class="stat-value">5 / 7</div>
+			</div>
+		</section>
+
+		<section class="categories-section">
+			<div class="section-header">
+				<h2>Category breakdown</h2>
+			</div>
+
+			<div class="category-list">
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Housing</span>
+						<span class="category-amount">R$1.200 / R$1.200</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 100%;">
+							<span class="progress-label at-limit">At limit</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Food</span>
+						<span class="category-amount">R$440 / R$600</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 73.33%; background: linear-gradient(90deg, #45c7a8 0%, #3db896 100%);">
+							<span class="progress-label">R$60 left</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Transport</span>
+						<span class="category-amount">R$190 / R$200</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 95%; background: linear-gradient(90deg, #ffa500 0%, #ff9500 100%);">
+							<span class="progress-label">R$10 left</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Entertainment</span>
+						<span class="category-amount">R$155 / R$200</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 77.5%; background: linear-gradient(90deg, #ff6b9d 0%, #ff5a8c 100%);">
+							<span class="progress-label">R$45 left</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Health</span>
+						<span class="category-amount">R$82 / R$150</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 54.67%; background: linear-gradient(90deg, #4499ff 0%, #3388ff 100%);">
+							<span class="progress-label">R$68 left</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="category-item">
+					<div class="category-info">
+						<span class="category-name">Shopping</span>
+						<span class="category-amount">R$130 / R$100</span>
+					</div>
+					<div class="progress-container">
+						<div class="progress-bar" style="width: 100%; background: linear-gradient(90deg, #ff5c5c 0%, #ff4a4a 100%);">
+							<span class="progress-label over-limit">Over R$30</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</div>
