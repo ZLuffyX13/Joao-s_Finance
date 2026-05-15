@@ -61,3 +61,182 @@
 			</div>
 		</div>
 	</nav>
+
+	<main class="main-content">
+		<div class="transactions-header">
+			<div class="header-title">
+				<h1>Transactions</h1>
+				<p class="date-range">May 2026 — {{ filteredTransactions.length }} transactions</p>
+			</div>
+
+			<div class="type-toggle">
+			<button class="type-btn" [class.active]="selectedType === 'Credit'" (click)="switchType('Credit')">
+				<span>Credit</span>
+			</button>
+			<button class="type-btn" [class.active]="selectedType === 'Debit'" (click)="switchType('Debit')">
+					<span>Debit</span>
+				</button>
+			</div>
+
+			<div class="header-controls">
+				<div class="search-box">
+					<i class="fas fa-search"></i>
+					<input type="text" placeholder="Search..." [(ngModel)]="searchQuery">
+				</div>
+
+				<div class="category-wrapper">
+					<select class="category-filter" [(ngModel)]="selectedCategory">
+						<option *ngFor="let cat of categories">{{ cat }}</option>
+					</select>
+					<i class="fas fa-chevron-down category-icon"></i>
+				</div>
+
+				<button class="add-btn" (click)="openAddForm()">
+					<i class="fas fa-plus"></i>
+					Add
+				</button>
+			</div>
+		</div>
+
+		<div class="transactions-table" [class.animating]="isAnimating">
+			<table>
+				<thead>
+					<tr>
+						<th>Description</th>
+						<th>Category</th>
+						<th>Date</th>
+						<th>Type</th>
+						<th>Amount</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let transaction of filteredTransactions; trackBy: trackByTransactionId" class="transaction-row">
+						<td class="description">{{ transaction.description }}</td>
+						<td class="category">
+							<span class="category-badge" [style.background-color]="transaction.categoryColor + '20'" [style.color]="transaction.categoryColor">
+								{{ transaction.category }}
+							</span>
+						</td>
+						<td class="date">{{ transaction.date }}</td>
+						<td class="type">
+							<span class="type-badge" [ngClass]="transaction.type.toLowerCase()">
+								{{ transaction.type }}
+							</span>
+						</td>
+						<td class="amount" [ngClass]="{ 'positive': transaction.amount > 0, 'negative': transaction.amount < 0 }">
+							{{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount | currency: 'R$' : 'symbol' : '1.0-0' }}
+						</td>
+						<td class="status">
+							<span class="status-badge" [ngClass]="transaction.status.toLowerCase()">
+								{{ transaction.status }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</main>
+
+	<!-- Add Transaction Modal -->
+	<div class="modal-overlay" *ngIf="showAddForm" (click)="closeAddForm()">
+		<div class="modal-content" (click)="$event.stopPropagation()">
+			<div class="modal-header">
+				<h2>Add New Transaction</h2>
+				<button class="close-btn" (click)="closeAddForm()">
+					<i class="fas fa-times"></i>
+				</button>
+			</div>
+
+			<form [formGroup]="transactionForm" (ngSubmit)="addTransaction()" class="add-form">
+				<div class="form-group">
+					<label for="description">Description *</label>
+					<input 
+						type="text" 
+						id="description" 
+						formControlName="description" 
+						placeholder="e.g., Grocery shopping"
+						class="form-input">
+					<span class="error-msg" *ngIf="transactionForm.get('description')?.invalid && transactionForm.get('description')?.touched">
+						Description is required (min 3 characters)
+					</span>
+				</div>
+
+				<div class="form-group">
+					<label for="category">Category *</label>
+					<input 
+						type="text" 
+						id="category" 
+						formControlName="category" 
+						placeholder="Type or select a category"
+						list="categoryList"
+						class="form-input">
+					<datalist id="categoryList">
+						<option *ngFor="let cat of categories.slice(1)" [value]="cat"></option>
+					</datalist>
+					<span class="error-msg" *ngIf="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
+						Category is required
+					</span>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="date">Date *</label>
+						<input 
+							type="date" 
+							id="date" 
+							formControlName="date" 
+							class="form-input">
+						<span class="error-msg" *ngIf="transactionForm.get('date')?.invalid && transactionForm.get('date')?.touched">
+							Date is required
+						</span>
+					</div>
+
+					<div class="form-group">
+						<label for="amount">Amount *</label>
+						<input 
+							type="number" 
+							id="amount" 
+							formControlName="amount" 
+							placeholder="0.00"
+							step="0.01"
+							class="form-input">
+						<span class="error-msg" *ngIf="transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched">
+							Valid amount required
+						</span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="status">Status *</label>
+					<select id="status" formControlName="status" class="form-input">
+						<option value="Confirmed">Confirmed</option>
+						<option value="Pending">Pending</option>
+					</select>
+					<span class="error-msg" *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
+						Status is required
+					</span>
+				</div>
+
+				<div class="form-group">
+					<label for="type">Type *</label>
+					<div class="type-selector">
+						<label class="type-option">
+							<input type="radio" value="Credit" formControlName="type">
+							<span>Credit</span>
+						</label>
+						<label class="type-option">
+							<input type="radio" value="Debit" formControlName="type">
+							<span>Debit</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="button" class="btn-cancel" (click)="closeAddForm()">Cancel</button>
+					<button type="submit" class="btn-submit" [disabled]="transactionForm.invalid">Add Transaction</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
