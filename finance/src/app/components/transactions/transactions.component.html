@@ -99,7 +99,15 @@
 		</div>
 
 		<div class="transactions-table" [class.animating]="isAnimating">
-			<table>
+			<div *ngIf="filteredTransactions.length === 0" class="empty-state">
+				<i class="fas fa-inbox"></i>
+				<p class="empty-title">No transactions yet</p>
+				<p class="empty-subtitle">
+					{{ selectedType === 'Credit' ? 'Start recording your income' : 'Start tracking your expenses' }} by clicking the "Add" button
+				</p>
+			</div>
+
+			<table *ngIf="filteredTransactions.length > 0">
 				<thead>
 					<tr>
 						<th>Description</th>
@@ -125,7 +133,7 @@
 							</span>
 						</td>
 						<td class="amount" [ngClass]="{ 'positive': transaction.amount > 0, 'negative': transaction.amount < 0 }">
-							{{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount | currency: 'R$' : 'symbol' : '1.0-0' }}
+							{{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount | currency: userCurrency : 'symbol' : '1.0-2' }}
 						</td>
 						<td class="status">
 							<span class="status-badge" [ngClass]="transaction.status.toLowerCase()">
@@ -210,8 +218,8 @@
 				<div class="form-group">
 					<label for="status">Status *</label>
 					<select id="status" formControlName="status" class="form-input">
-						<option value="Confirmed">Confirmed</option>
-						<option value="Pending">Pending</option>
+						<option value="Paid">Paid</option>
+						<option value="Paying">Paying</option>
 					</select>
 					<span class="error-msg" *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
 						Status is required

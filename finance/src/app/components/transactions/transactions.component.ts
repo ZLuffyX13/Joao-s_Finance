@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { TransactionService } from '../../services/transaction.service';
 
 interface Transaction {
   id: number;
@@ -8,7 +9,7 @@ interface Transaction {
   category: string;
   date: string;
   amount: number;
-  status: 'Confirmed' | 'Pending';
+  status: 'Paying' | 'Paid';
   type: 'Credit' | 'Debit';
   categoryColor?: string;
 }
@@ -21,6 +22,7 @@ interface Transaction {
 export class TransactionsComponent implements OnInit {
     userInitials: string = 'AA';
     userName: string = 'User';
+    userCurrency: string = 'BRL';
     isUserMenuOpen = false;
     isSidebarOpen = false;
     showAddForm = false;
@@ -30,32 +32,38 @@ export class TransactionsComponent implements OnInit {
     isAnimating = false;
     transactionForm: FormGroup;
 
-    transactions: Transaction[] = [
-      { id: 1, description: 'Salary', category: 'Income', date: 'May 1', amount: 5000, status: 'Confirmed', type: 'Credit', categoryColor: '#45e0a1' },
-      { id: 2, description: 'Rent', category: 'Housing', date: 'May 1', amount: -1200, status: 'Confirmed', type: 'Debit', categoryColor: '#a855f7' },
-      { id: 3, description: 'Mercadão', category: 'Food', date: 'May 3', amount: -887, status: 'Confirmed', type: 'Debit', categoryColor: '#3b82f6' },
-      { id: 4, description: 'IFood', category: 'Food', date: 'May 4', amount: -842, status: 'Confirmed', type: 'Debit', categoryColor: '#3b82f6' },
-      { id: 5, description: 'Uber', category: 'Transport', date: 'May 5', amount: -918, status: 'Confirmed', type: 'Debit', categoryColor: '#f59e0b' },
-      { id: 6, description: 'Netflix', category: 'Entertainment', date: 'May 5', amount: -339, status: 'Pending', type: 'Debit', categoryColor: '#ef4444' },
-      { id: 7, description: 'Farmácia', category: 'Health', date: 'May 6', amount: -455, status: 'Confirmed', type: 'Debit', categoryColor: '#06b6d4' }
-    ];
+    transactions: Transaction[] = [];
+
+    categoryColorMap: { [key: string]: string } = {
+      'Income': '#45e0a1',
+      'Housing': '#a855f7',
+      'Food': '#3b82f6',
+      'Transport': '#f59e0b',
+      'Entertainment': '#ef4444',
+      'Health': '#06b6d4'
+    };
 
     categories = ['All categories', 'Income', 'Housing', 'Food', 'Transport', 'Entertainment', 'Health'];
   
-    constructor(private readonly router: Router, private fb: FormBuilder) {
+    constructor(
+      private readonly router: Router, 
+      private fb: FormBuilder,
+      private transactionService: TransactionService
+    ) {
       this.transactionForm = this.fb.group({
         description: ['', [Validators.required, Validators.minLength(3)]],
         category: ['', Validators.required],
         date: ['', Validators.required],
         amount: ['', [Validators.required, Validators.pattern(/^-?\d+(\.\d{1,2})?$/)]],
         type: ['Credit', Validators.required],
-        status: ['Confirmed', Validators.required]
+        status: ['Paid', Validators.required]
       });
     }
   
     ngOnInit(): void {
       this.loadUserData();
       this.loadSidebarState();
+      this.loadTransactions();
   }
 
   openAddForm(): void {
@@ -65,34 +73,54 @@ export class TransactionsComponent implements OnInit {
 
   closeAddForm(): void {
     this.showAddForm = false;
-    this.transactionForm.reset({ status: 'Confirmed', type: 'Credit' });
+    this.transactionForm.reset({ status: 'Paid', type: 'Credit' });
     document.body.style.overflow = 'auto';
   }
 
   addTransaction(): void {
     if (this.transactionForm.valid) {
       const formValue = this.transactionForm.value;
-      const newTransaction: Transaction = {
-        id: Math.max(...this.transactions.map(t => t.id), 0) + 1,
-        ...formValue,
+      
+      // Format date to ISO string if needed
+      const dateValue = formValue.date instanceof Date 
+        ? formValue.date.toISOString().split('T')[0] 
+        : formValue.date;
+
+      const transactionData = {
+        description: formValue.description,
+        category: formValue.category,
         amount: parseFloat(formValue.amount),
-        categoryColor: this.getCategoryColor(formValue.category)
+        type: formValue.type,
+        status: formValue.status,
+        date: dateValue
       };
-      this.transactions.unshift(newTransaction);
-      this.closeAddForm();
+
+      this.transactionService.createTransaction(transactionData).subscribe({
+        next: (response) => {
+          console.log('Transaction created successfully:', response);
+          const newTransaction: Transaction = {
+            id: response.transaction._id,
+            ...transactionData,
+            categoryColor: this.getCategoryColor(transactionData.category)
+          };
+          this.transactions.unshift(newTransaction);
+          this.closeAddForm();
+        },
+        error: (error) => {
+          console.error('Error creating transaction:', error);
+          alert(`Error: ${error.error?.message || 'Failed to create transaction'}`);
+        }
+      });
     }
   }
 
   getCategoryColor(category: string): string {
-    const colors: { [key: string]: string } = {
-      'Income': '#45e0a1',
-      'Housing': '#a855f7',
-      'Food': '#3b82f6',
-      'Transport': '#f59e0b',
-      'Entertainment': '#ef4444',
-      'Health': '#06b6d4'
-    };
-    return colors[category] || '#808080';
+    if (!this.categoryColorMap[category]) {
+      // Generate random color for new categories
+      const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      this.categoryColorMap[category] = randomColor;
+    }
+    return this.categoryColorMap[category];
   }
 
   get filteredTransactions(): Transaction[] {
@@ -109,6 +137,7 @@ export class TransactionsComponent implements OnInit {
       this.isAnimating = true;
       setTimeout(() => {
         this.selectedType = type;
+        this.loadTransactions(); // Reload transactions for the new type
         this.isAnimating = false;
       }, 150);
     }
@@ -160,6 +189,30 @@ export class TransactionsComponent implements OnInit {
       localStorage.removeItem('auth_user');
       this.router.navigate(['/']);
     }
+
+    private loadTransactions(): void {
+      const filters = {
+        type: this.selectedType
+      };
+      this.transactionService.getTransactions(filters).subscribe({
+        next: (response) => {
+          this.transactions = response.transactions.map((t: any) => ({
+            id: t._id,
+            description: t.description,
+            category: t.category,
+            date: new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            amount: t.amount,
+            status: t.status,
+            type: t.type,
+            categoryColor: this.getCategoryColor(t.category)
+          }));
+        },
+        error: (error) => {
+          console.error('Error loading transactions:', error);
+          console.log('Using sample data for now...');
+        }
+      });
+    }
   
      private loadUserData(): void {
       const userJson = localStorage.getItem('auth_user');
@@ -170,9 +223,11 @@ export class TransactionsComponent implements OnInit {
           const lastName = user.lastName?.charAt(0)?.toUpperCase() || 'S';
           this.userInitials = firstName + lastName;
           this.userName = user.firstName || 'User';
+          this.userCurrency = user.currency || 'BRL';
         } catch {
           this.userInitials = 'US';
           this.userName = 'User';
+          this.userCurrency = 'BRL';
         }
       }
     }
