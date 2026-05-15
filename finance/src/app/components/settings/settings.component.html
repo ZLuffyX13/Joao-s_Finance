@@ -1,1 +1,63 @@
-<p>settings works!</p>
+<div class="container" [class.collapsed]="!isSidebarOpen">
+	<nav class="sidebar" [class.collapsed]="!isSidebarOpen">
+		<div class="sidebar-header">
+			<span class="sidebar-logo">Finance</span><span class="sidebar-accent">Flow</span>
+			<button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+				<i class="fas fa-bars"></i>
+			</button>
+		</div>
+
+		<ul class="nav-menu">
+			<li class="nav-item">
+				<a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-chart-line"></i>
+					<span class="nav-label">Dashboard</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/budget" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-wallet"></i>
+					<span class="nav-label">Budget</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/goals" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-bullseye"></i>
+					<span class="nav-label">Goals</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/transactions" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-exchange-alt"></i>
+					<span class="nav-label">Transactions</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a routerLink="/reports" routerLinkActive="active" class="nav-link">
+					<i class="fas fa-chart-bar"></i>
+					<span class="nav-label">Reports</span>
+				</a>
+			</li>
+		</ul>
+
+		<div class="sidebar-footer">
+			<div class="user-avatar" (click)="toggleUserMenu()" [title]="userInitials">
+				{{ userInitials }}
+			</div>
+			<div class="user-menu" *ngIf="isUserMenuOpen">
+				<button class="menu-item" (click)="navigateTo('/notifications')">
+					<i class="fas fa-bell"></i>
+					<span>Notifications</span>
+				</button>
+				<button class="menu-item" (click)="navigateTo('/settings')">
+					<i class="fas fa-cog"></i>
+					<span>Settings</span>
+				</button>
+				<div class="menu-divider"></div>
+				<button class="menu-item logout-btn" (click)="logout()">
+					<i class="fas fa-sign-out-alt"></i>
+					<span>Logout</span>
+				</button>
+			</div>
+		</div>
+	</nav>

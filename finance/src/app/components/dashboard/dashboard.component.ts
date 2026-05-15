@@ -16,6 +16,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadSidebarState();
   }
 
   toggleUserMenu(): void {
@@ -41,7 +42,20 @@ export class DashboardComponent implements OnInit {
 
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
+
+    localStorage.setItem(
+    'sidebar_open',
+    JSON.stringify(this.isSidebarOpen)
+  );
   }
+
+  private loadSidebarState(): void {
+  const savedState = localStorage.getItem('sidebar_open');
+
+  if (savedState !== null) {
+    this.isSidebarOpen = JSON.parse(savedState);
+  }
+}
 
   logout(): void {
     localStorage.removeItem('auth_token');
