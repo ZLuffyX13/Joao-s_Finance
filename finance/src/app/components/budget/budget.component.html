@@ -68,7 +68,7 @@
 				<h1 class="page-title">Budget Tracker</h1>
 				<p class="subtitle">{{ currentMonth }} 2026 — {{ daysRemaining }} days remaining</p>
 			</div>
-			<button class="edit-button">
+			<button class="edit-button" (click)="toggleEditForm()">
 				<i class="fas fa-edit"></i> Edit budget
 			</button>
 		</header>
@@ -76,19 +76,19 @@
 		<section class="budget-stats">
 			<div class="stat-card">
 				<label class="stat-label">Total budget</label>
-				<div class="stat-value">R$3.200</div>
+				<div class="stat-value">R${{ monthlyBudget | number:'1.0-0' }}</div>
 			</div>
 			<div class="stat-card">
 				<label class="stat-label">Spent</label>
-				<div class="stat-value">R$2.194</div>
+				<div class="stat-value">R${{ totalSpent | number:'1.0-0' }}</div>
 			</div>
 			<div class="stat-card">
 				<label class="stat-label">Remaining</label>
-				<div class="stat-value positive">R$1.006</div>
+				<div class="stat-value" [class.positive]="remaining >= 0">R${{ remaining | number:'1.0-0' }}</div>
 			</div>
 			<div class="stat-card">
 				<label class="stat-label">On track</label>
-				<div class="stat-value">5 / 7</div>
+				<div class="stat-value">{{ onTrackCount }} / {{ categories.length }}</div>
 			</div>
 		</section>
 
@@ -98,78 +98,105 @@
 			</div>
 
 			<div class="category-list">
-				<div class="category-item">
+				<div class="category-item" *ngFor="let category of categories; trackBy: trackByCategoryName">
 					<div class="category-info">
-						<span class="category-name">Housing</span>
-						<span class="category-amount">R$1.200 / R$1.200</span>
-					</div>
-					<div class="progress-container">
-						<div class="progress-bar" style="width: 100%;">
-							<span class="progress-label at-limit">At limit</span>
+						<div class="category-left">
+							<div class="swatch-wrapper">
+								<div class="color-swatch" [style.background-color]="category.colorStart" (click)="togglePalette(category)" [attr.title]="'Change color for ' + category.name"></div>
+								<input type="color" #nativePicker style="display:none" [value]="category.colorStart" (input)="changeCategoryColor(category, nativePicker.value)" />
+								<span class="category-name">{{ category.name }}</span>
+								<div class="color-popover" *ngIf="openPaletteFor === category.name">
+									<div class="palette-grid">
+										<button *ngFor="let c of paletteColors" class="palette-swatch" [style.background]="c" (click)="changeCategoryColor(category, c)">
+											<i *ngIf="(category.colorStart || '')?.toLowerCase() === c.toLowerCase()" class="fas fa-check selected-icon" aria-hidden="true"></i>
+										</button>
+										<button class="palette-swatch custom" (click)="nativePicker.click()" title="Custom color">✦</button>
+										<button class="palette-swatch reset" (click)="changeCategoryColor(category, '#ffffff')" title="Reset">↺</button>
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
-				</div>
-
-				<div class="category-item">
-					<div class="category-info">
-						<span class="category-name">Food</span>
-						<span class="category-amount">R$440 / R$600</span>
+						<span class="category-amount">R${{ category.spent | number:'1.0-0' }} / R${{ getCategoryBudget(category) | number:'1.0-0' }}</span>
 					</div>
 					<div class="progress-container">
-						<div class="progress-bar" style="width: 73.33%; background: linear-gradient(90deg, #45c7a8 0%, #3db896 100%);">
-							<span class="progress-label">R$60 left</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="category-item">
-					<div class="category-info">
-						<span class="category-name">Transport</span>
-						<span class="category-amount">R$190 / R$200</span>
-					</div>
-					<div class="progress-container">
-						<div class="progress-bar" style="width: 95%; background: linear-gradient(90deg, #ffa500 0%, #ff9500 100%);">
-							<span class="progress-label">R$10 left</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="category-item">
-					<div class="category-info">
-						<span class="category-name">Entertainment</span>
-						<span class="category-amount">R$155 / R$200</span>
-					</div>
-					<div class="progress-container">
-						<div class="progress-bar" style="width: 77.5%; background: linear-gradient(90deg, #ff6b9d 0%, #ff5a8c 100%);">
-							<span class="progress-label">R$45 left</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="category-item">
-					<div class="category-info">
-						<span class="category-name">Health</span>
-						<span class="category-amount">R$82 / R$150</span>
-					</div>
-					<div class="progress-container">
-						<div class="progress-bar" style="width: 54.67%; background: linear-gradient(90deg, #4499ff 0%, #3388ff 100%);">
-							<span class="progress-label">R$68 left</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="category-item">
-					<div class="category-info">
-						<span class="category-name">Shopping</span>
-						<span class="category-amount">R$130 / R$100</span>
-					</div>
-					<div class="progress-container">
-						<div class="progress-bar" style="width: 100%; background: linear-gradient(90deg, #ff5c5c 0%, #ff4a4a 100%);">
-							<span class="progress-label over-limit">Over R$30</span>
+						<div
+							*ngIf="getCategoryProgress(category) > 0"
+							class="progress-bar"
+							[style.width.%]="getCategoryProgress(category)"
+							[style.background]="category.colorStart"
+						>
+							<span class="progress-label" [class.at-limit]="getCategoryRemaining(category) <= 0" [class.over-limit]="getCategoryRemaining(category) < 0">
+								{{ getCategoryStatusLabel(category) }}
+							</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</section>
 	</main>
+
+	<!-- Edit Budget Modal -->
+	<div class="modal-backdrop" *ngIf="isEditFormOpen" (click)="cancelEdit()"></div>
+	<div class="edit-modal" *ngIf="isEditFormOpen">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 class="modal-title">Edit Monthly Budget</h2>
+				<button class="close-button" (click)="cancelEdit()" aria-label="Close modal">
+					<i class="fas fa-times"></i>
+				</button>
+			</div>
+
+			<div class="modal-body">
+				<div class="form-group">
+					<label class="form-label">Monthly Budget (R$)</label>
+					<div class="input-wrapper">
+						<span class="currency-prefix">R$</span>
+						<input
+							type="number"
+							class="form-input"
+							[(ngModel)]="formBudget"
+							placeholder="Enter budget amount"
+							min="0"
+							step="0.01"
+							(keyup.enter)="saveBudget()"
+						/>
+					</div>
+					<p class="input-hint">Set how much you want to spend this month</p>
+				</div>
+
+				<div class="category-form-section">
+					<div class="category-form-header">
+						<h3>Category percentages</h3>
+						<span class="category-form-summary">{{ getTotalCategoryPercentage(editCategories) | number:'1.0-0' }}% assigned</span>
+					</div>
+
+					<div class="category-form-list">
+						<div class="category-form-row" *ngFor="let category of editCategories; let index = index; trackBy: trackByCategoryName">
+							<div class="category-form-labels">
+								<span class="category-form-name">{{ category.name }}</span>
+								<span class="category-form-budget">R${{ getCategoryBudget(category) | number:'1.0-0' }} available</span>
+							</div>
+							<div class="category-form-input">
+								<input
+									type="number"
+									min="0"
+									max="100"
+									step="0.1"
+									[(ngModel)]="category.percentage"
+									placeholder="0"
+								/>
+								<span class="percent-symbol">%</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal-footer">
+				<button class="button-cancel" (click)="cancelEdit()">Cancel</button>
+				<button class="button-save secondary" (click)="saveBudget()">Save Budget</button>
+				<button class="button-save" (click)="confirmChanges()">Confirm changes</button>
+			</div>
+		</div>
+	</div>
 </div>

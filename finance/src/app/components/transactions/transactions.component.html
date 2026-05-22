@@ -66,7 +66,7 @@
 		<div class="transactions-header">
 			<div class="header-title">
 				<h1>Transactions</h1>
-				<p class="date-range">May 2026 — {{ filteredTransactions.length }} transactions</p>
+				<div class="date-label">{{ getSelectedMonthLabel() }} — {{ filteredTransactions.length }} transactions</div>
 			</div>
 
 			<div class="type-toggle">
@@ -75,6 +75,9 @@
 			</button>
 			<button class="type-btn" [class.active]="selectedType === 'Debit'" (click)="switchType('Debit')">
 					<span>Debit</span>
+				</button>
+			<button class="type-btn" [class.active]="selectedType === 'Income'" (click)="switchType('Income')">
+					<span>Income</span>
 				</button>
 			</div>
 
@@ -85,10 +88,16 @@
 				</div>
 
 				<div class="category-wrapper">
-					<select class="category-filter" [(ngModel)]="selectedCategory">
+					<select class="category-filter" [(ngModel)]="selectedCategory" [class.all-selected]="selectedCategory === 'All categories'">
 						<option *ngFor="let cat of categories">{{ cat }}</option>
 					</select>
 					<i class="fas fa-chevron-down category-icon"></i>
+				</div>
+
+				<div class="month-picker">
+					<button class="month-open-btn" (click)="openMonthPicker()" aria-label="Open month picker">Select Month</button>
+					<!-- native month input kept hidden for fallback -->
+					<input type="month" [(ngModel)]="selectedMonth" (change)="onMonthChange()" style="display:none" />
 				</div>
 
 				<button class="add-btn" (click)="openAddForm()">
@@ -103,7 +112,7 @@
 				<i class="fas fa-inbox"></i>
 				<p class="empty-title">No transactions yet</p>
 				<p class="empty-subtitle">
-					{{ selectedType === 'Credit' ? 'Start recording your income' : 'Start tracking your expenses' }} by clicking the "Add" button
+					{{ selectedType === 'Debit' ? 'Start tracking your expenses' : 'Start recording your income' }} by clicking the "Add" button
 				</p>
 			</div>
 
@@ -150,7 +159,7 @@
 							<button
 								*ngIf="transaction.installments && transaction.installments > 1 && transaction.status === 'Paying'"
 								class="action-btn pay-btn"
-								(click)="payInstallmentEarly(transaction.id)"
+								(click)="openPayModal(transaction)"
 								title="Pay early"
 							>
 								<i class="fas fa-check-double"></i>
@@ -158,7 +167,7 @@
 							<button class="action-btn edit-btn" (click)="openEditForm(transaction)" title="Edit">
 								<i class="fas fa-edit"></i>
 							</button>
-							<button class="action-btn delete-btn" (click)="deleteTransaction(transaction.id)" title="Delete">
+							<button class="action-btn delete-btn" (click)="openDeleteModal(transaction)" title="Delete">
 								<i class="fas fa-trash"></i>
 							</button>
 						</td>
@@ -167,6 +176,51 @@
 			</table>
 		</div>
 	</main>
+
+	<!-- Month picker overlay -->
+	<div class="month-overlay" *ngIf="showMonthPicker" (click)="closeMonthPicker()">
+		<div class="month-menu" (click)="$event.stopPropagation()">
+			<div class="month-menu-header">
+				<h3>Select month — {{ getPickerYear() }}</h3>
+				<button class="close-month" (click)="closeMonthPicker()">✕</button>
+			</div>
+			<div class="month-grid">
+								<button
+									*ngFor="let m of months; let i = index"
+									class="month-option"
+									(click)="selectMonthIndex(i)"
+									[class.current]="getPickerYear() === today.getFullYear() && i === today.getMonth()"
+									[class.selected]="isSelectedMonthIndex(i)"
+								>
+									{{ m }}
+								</button>
+			</div>
+		</div>
+	</div>
+
+		<!-- Delete Group Modal -->
+		<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+			<div class="modal-content" (click)="$event.stopPropagation()">
+				<div class="modal-header">
+					<h2>Delete installment group</h2>
+					<button class="close-btn" (click)="closeDeleteModal()">
+						<i class="fas fa-times"></i>
+					</button>
+				</div>
+
+				<div class="pay-modal-body">
+					<p *ngIf="deleteModalTransaction">
+						Deleting this parcel will remove <strong>{{ deleteModalCount }} parcel{{ deleteModalCount > 1 ? 's' : '' }}</strong>.
+						This action cannot be undone. Do you want to proceed?
+					</p>
+
+					<div class="form-actions">
+						<button class="btn-cancel" type="button" (click)="closeDeleteModal()">Cancel</button>
+						<button class="btn-submit" type="button" (click)="confirmDelete()">Delete</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 	<!-- Add Transaction Modal -->
 	<div class="modal-overlay" *ngIf="showAddForm" (click)="closeAddForm()">
@@ -242,6 +296,7 @@
 					<select id="status" formControlName="status" class="form-input">
 						<option value="Paid">Paid</option>
 						<option value="Paying">Paying</option>
+						<option value="Received">Received</option>
 					</select>
 					<span class="error-msg" *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
 						Status is required
@@ -275,6 +330,10 @@
 							<input type="radio" value="Debit" formControlName="type">
 							<span>Debit</span>
 						</label>
+						<label class="type-option">
+							<input type="radio" value="Income" formControlName="type">
+							<span>Income</span>
+						</label>
 					</div>
 				</div>
 
@@ -285,6 +344,51 @@
 			</form>
 		</div>
 	</div>
+
+		<!-- Pay Installment Modal -->
+		<div class="modal-overlay" *ngIf="showPayModal" (click)="closePayModal()">
+			<div class="modal-content" (click)="$event.stopPropagation()">
+				<div class="modal-header">
+					<h2>Confirm early payment</h2>
+					<button class="close-btn" (click)="closePayModal()">
+						<i class="fas fa-times"></i>
+					</button>
+				</div>
+
+
+
+				<div class="pay-modal-body">
+					<p *ngIf="payModalTransaction">
+						You're about to pay <strong>parcel {{ payModalTransaction.installmentNumber }} of {{ payModalTransaction.installments }}</strong>
+						for "<em>{{ payModalTransaction.description }}</em>".
+					</p>
+					<p *ngIf="(payModalTransaction?.installmentNumber || 0) > 1">
+						Choose whether to pay only this parcel or also mark the previous parcel (parcel {{ (payModalTransaction?.installmentNumber || 0) - 1 }}) as paid.
+					</p>
+					<p *ngIf="(payModalTransaction?.installmentNumber || 0) <= 1">
+						Confirm payment for this parcel.
+					</p>
+
+					<div class="future-preview" *ngIf="(payModalFutureInstallments?.length || 0) > 0">
+						<h4>Remaining installments</h4>
+						<ul class="future-list">
+							<li *ngFor="let f of payModalFutureInstallments">
+								<span class="fi-num">Parcel {{ f.installmentNumber }} / {{ f.installments }}</span>
+								<span class="fi-desc">{{ f.description }}</span>
+								<span class="fi-date">{{ f.date }}</span>
+								<span class="fi-amount">{{ f.amount | currency: userCurrency : 'symbol' : '1.0-2' }}</span>
+							</li>
+						</ul>
+					</div>
+
+					<div class="form-actions">
+						<button class="btn-cancel" type="button" (click)="closePayModal()">Cancel</button>
+						<button class="btn-submit" type="button" (click)="confirmPay(false)">Pay Only This</button>
+						<button *ngIf="(payModalTransaction?.installmentNumber || 0) > 1" class="btn-submit" type="button" (click)="confirmPay(true)">Pay & Mark Previous</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 	<!-- Edit Transaction Modal -->
 	<div class="modal-overlay" *ngIf="showEditForm" (click)="closeEditForm()">
@@ -360,6 +464,7 @@
 					<select id="edit-status" formControlName="status" class="form-input">
 						<option value="Paid">Paid</option>
 						<option value="Paying">Paying</option>
+						<option value="Received">Received</option>
 					</select>
 					<span class="error-msg" *ngIf="editTransactionForm.get('status')?.invalid && editTransactionForm.get('status')?.touched">
 						Status is required
@@ -376,6 +481,10 @@
 						<label class="type-option">
 							<input type="radio" value="Debit" formControlName="type">
 							<span>Debit</span>
+						</label>
+						<label class="type-option">
+							<input type="radio" value="Income" formControlName="type">
+							<span>Income</span>
 						</label>
 					</div>
 				</div>

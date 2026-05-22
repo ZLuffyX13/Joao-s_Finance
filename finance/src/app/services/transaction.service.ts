@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 interface CreateTransactionRequest {
   description: string;
   category: string;
   amount: number;
-  type: 'Credit' | 'Debit';
+  type: 'Credit' | 'Debit' | 'Income';
   status: 'Paying' | 'Paid';
   date: string;
   installments?: number;
@@ -29,6 +30,17 @@ interface TransactionsListResponse {
 })
 export class TransactionService {
   private apiUrl = `${environment.apiUrl}/transactions`;
+  // Emits the latest transactions array when transactions change
+  transactionsChanged: Subject<any[]> = new Subject<any[]>();
+  // Emits a single transaction when an installment is paid early
+  installmentPaid: Subject<any> = new Subject<any>();
+
+  private refreshTransactions(): void {
+    this.getTransactions().subscribe({
+      next: (res) => this.transactionsChanged.next(res.transactions || []),
+      error: () => this.transactionsChanged.next([])
+    });
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -42,7 +54,9 @@ export class TransactionService {
 
   createTransaction(data: CreateTransactionRequest): Observable<TransactionResponse> {
     const headers = this.getAuthHeaders();
-    return this.http.post<TransactionResponse>(`${this.apiUrl}/create`, data, { headers });
+    return this.http.post<TransactionResponse>(`${this.apiUrl}/create`, data, { headers }).pipe(
+      tap(() => this.refreshTransactions())
+    );
   }
 
   getTransactions(filters?: {
@@ -74,16 +88,34 @@ export class TransactionService {
 
   updateTransaction(id: string, data: Partial<CreateTransactionRequest>): Observable<TransactionResponse> {
     const headers = this.getAuthHeaders();
-    return this.http.put<TransactionResponse>(`${this.apiUrl}/${id}`, data, { headers });
+    return this.http.put<TransactionResponse>(`${this.apiUrl}/${id}`, data, { headers }).pipe(
+      tap(() => this.refreshTransactions())
+    );
   }
 
-  payInstallmentEarly(id: string): Observable<TransactionResponse> {
+  payInstallmentEarly(id: string, markPrevious: boolean = false): Observable<TransactionResponse> {
     const headers = this.getAuthHeaders();
-    return this.http.patch<TransactionResponse>(`${this.apiUrl}/${id}/pay-early`, {}, { headers });
+    const body = { markPrevious };
+    return this.http.patch<TransactionResponse>(`${this.apiUrl}/${id}/pay-early`, body, { headers }).pipe(
+      tap((res) => {
+        this.refreshTransactions();
+        try { if (res && res.transaction) this.installmentPaid.next(res.transaction); } catch {}
+      })
+    );
   }
 
   deleteTransaction(id: string): Observable<any> {
     const headers = this.getAuthHeaders();
-    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers }).pipe(
+      tap(() => this.refreshTransactions())
+    );
+  }
+
+  deleteTransactionGroup(id: string, deleteGroup: boolean): Observable<any> {
+    const headers = this.getAuthHeaders();
+    const url = deleteGroup ? `${this.apiUrl}/${id}?deleteGroup=true` : `${this.apiUrl}/${id}`;
+    return this.http.delete<any>(url, { headers }).pipe(
+      tap(() => this.refreshTransactions())
+    );
   }
 }

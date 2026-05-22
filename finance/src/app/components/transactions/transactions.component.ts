@@ -11,7 +11,7 @@ interface Transaction {
   rawDate?: string;
   amount: number;
   status: 'Paying' | 'Paid';
-  type: 'Credit' | 'Debit';
+  type: 'Credit' | 'Debit' | 'Income';
   installments?: number;
   installmentNumber?: number;
   installmentGroupId?: string;
@@ -24,6 +24,8 @@ interface Transaction {
   styleUrl: './transactions.component.scss'
 })
 export class TransactionsComponent implements OnInit {
+  // today's date reference for month picker highlighting
+  today: Date = new Date();
     userInitials: string = 'AA';
     userName: string = 'User';
     userCurrency: string = 'BRL';
@@ -34,23 +36,25 @@ export class TransactionsComponent implements OnInit {
     editingTransactionId: string | null = null;
     searchQuery = '';
     selectedCategory = 'All categories';
-    selectedType: 'Credit' | 'Debit' = 'Credit';
+    selectedType: 'Credit' | 'Debit' | 'Income' = 'Credit';
+    selectedMonth: string = '';
+    showMonthPicker: boolean = false;
+    months: string[] = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     isAnimating = false;
     transactionForm: FormGroup;
     editTransactionForm: FormGroup;
 
     transactions: Transaction[] = [];
+    showPayModal: boolean = false;
+    payModalTransaction: Transaction | null = null;
+    payModalFutureInstallments: Transaction[] = [];
+    showDeleteModal: boolean = false;
+    deleteModalTransaction: Transaction | null = null;
+    deleteModalCount: number = 0;
 
-    categoryColorMap: { [key: string]: string } = {
-      'Income': '#45e0a1',
-      'Housing': '#a855f7',
-      'Food': '#3b82f6',
-      'Transport': '#f59e0b',
-      'Entertainment': '#ef4444',
-      'Health': '#06b6d4'
-    };
+    categoryColorMap: { [key: string]: string } = {};
 
-    categories = ['All categories', 'Income', 'Housing', 'Food', 'Transport', 'Entertainment', 'Health'];
+    categories: string[] = ['All categories', 'Income'];
   
     constructor(
       private readonly router: Router, 
@@ -75,16 +79,62 @@ export class TransactionsComponent implements OnInit {
         type: ['Credit', Validators.required],
         status: ['Paid', Validators.required]
       });
+      // Keep status in sync with type for both forms
+      const syncStatus = (form: FormGroup) => {
+        form.get('type')?.valueChanges.subscribe((newType) => {
+          if (newType === 'Income') {
+            form.get('status')?.setValue('Received');
+          } else if (form.get('status')?.value === 'Received') {
+            form.get('status')?.setValue('Paid');
+          }
+        });
+      };
+      syncStatus(this.transactionForm);
+      syncStatus(this.editTransactionForm);
     }
   
     ngOnInit(): void {
       this.loadUserData();
       this.loadSidebarState();
-      this.loadTransactions();
+      this.loadCategoriesFromStorage();
+        // default to current month
+        const now = new Date();
+        this.selectedMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        this.loadTransactions();
+  }
+
+  private loadCategoriesFromStorage(): void {
+    try {
+      const raw = localStorage.getItem('app_categories');
+      if (raw) {
+        const parsed = JSON.parse(raw) as Array<any>;
+        const names = parsed.map(p => p.name).filter(Boolean);
+        // keep 'All categories' and 'Income' at start
+        this.categories = ['All categories', 'Income', ...names.filter(n => n !== 'Income')];
+        parsed.forEach(p => {
+          if (p.name) this.categoryColorMap[p.name] = p.colorStart || ('#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+        });
+      } else {
+        // default categories
+        this.categories = ['All categories', 'Income', 'Housing', 'Food', 'Transport', 'Entertainment', 'Health'];
+        this.categoryColorMap = {
+          'Income': '#45e0a1',
+          'Housing': '#a855f7',
+          'Food': '#3b82f6',
+          'Transport': '#f59e0b',
+          'Entertainment': '#ef4444',
+          'Health': '#06b6d4'
+        };
+      }
+    } catch {
+      this.categories = ['All categories', 'Income', 'Housing', 'Food', 'Transport', 'Entertainment', 'Health'];
+    }
   }
 
   openAddForm(): void {
     this.showAddForm = true;
+    // prefill type/status based on current selectedType (e.g., Income -> Received)
+    this.transactionForm.patchValue({ type: this.selectedType, status: this.selectedType === 'Income' ? 'Received' : 'Paid' });
     document.body.style.overflow = 'hidden';
   }
 
@@ -135,15 +185,8 @@ export class TransactionsComponent implements OnInit {
       };
 
       this.transactionService.createTransaction(transactionData).subscribe({
-        next: (response) => {
-          console.log('Transaction created successfully:', response);
-          this.loadTransactions();
-          this.closeAddForm();
-        },
-        error: (error) => {
-          console.error('Error creating transaction:', error);
-          alert(`Error: ${error.error?.message || 'Failed to create transaction'}`);
-        }
+        next: () => { this.loadTransactions(); this.closeAddForm(); },
+        error: (error) => { alert(`Error: ${error.error?.message || 'Failed to create transaction'}`); }
       });
     }
   }
@@ -166,47 +209,90 @@ export class TransactionsComponent implements OnInit {
       };
 
       this.transactionService.updateTransaction(this.editingTransactionId, transactionData).subscribe({
-        next: (response) => {
-          console.log('Transaction updated successfully:', response);
-          this.loadTransactions();
-          this.closeEditForm();
-        },
-        error: (error) => {
-          console.error('Error updating transaction:', error);
-          alert(`Error: ${error.error?.message || 'Failed to update transaction'}`);
-        }
+        next: () => { this.loadTransactions(); this.closeEditForm(); },
+        error: (error) => { alert(`Error: ${error.error?.message || 'Failed to update transaction'}`); }
       });
     }
   }
 
   deleteTransaction(transactionId: string): void {
-    if (confirm('Are you sure you want to delete this transaction?')) {
-      this.transactionService.deleteTransaction(transactionId.toString()).subscribe({
-        next: (response) => {
-          console.log('Transaction deleted successfully:', response);
-          this.transactions = this.transactions.filter(t => t.id !== transactionId);
-        },
-        error: (error) => {
-          console.error('Error deleting transaction:', error);
-          alert(`Error: ${error.error?.message || 'Failed to delete transaction'}`);
-        }
-      });
-    }
+    this.transactionService.deleteTransactionGroup(transactionId.toString(), false).subscribe({
+      next: () => { this.transactions = this.transactions.filter(t => t.id !== transactionId); },
+      error: (error) => { alert(`Error: ${error.error?.message || 'Failed to delete transaction'}`); }
+    });
   }
 
-  payInstallmentEarly(transactionId: string): void {
-    if (confirm('Pay this installment early and remove the future installments?')) {
-      this.transactionService.payInstallmentEarly(transactionId).subscribe({
-        next: (response) => {
-          console.log('Installment paid early successfully:', response);
-          this.loadTransactions();
-        },
-        error: (error) => {
-          console.error('Error paying installment early:', error);
-          alert(`Error: ${error.error?.message || 'Failed to pay installment early'}`);
-        }
-      });
+  openDeleteModal(transaction: Transaction): void {
+    this.deleteModalTransaction = transaction;
+    // compute how many parcels are in the same group
+    if (transaction.installmentGroupId) {
+      // Prefer the `installments` number present on the transaction (total group size)
+      if (transaction.installments && transaction.installments > 1) {
+        this.deleteModalCount = transaction.installments;
+      } else {
+        this.deleteModalCount = this.transactions.filter(t => t.installmentGroupId === transaction.installmentGroupId).length || 1;
+      }
+    } else {
+      this.deleteModalCount = 1;
     }
+    this.showDeleteModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.deleteModalTransaction = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  confirmDelete(): void {
+    if (!this.deleteModalTransaction) return;
+    const id = this.deleteModalTransaction.id;
+    // If this parcel belongs to an installment group, delete the whole group
+    const deleteGroup = !!this.deleteModalTransaction.installmentGroupId;
+    this.transactionService.deleteTransactionGroup(id, deleteGroup).subscribe({
+      next: (res) => {
+        if (deleteGroup) {
+          const gid = this.deleteModalTransaction?.installmentGroupId;
+          if (gid) this.transactions = this.transactions.filter(t => t.installmentGroupId !== gid);
+        } else {
+          this.transactions = this.transactions.filter(t => t.id !== id);
+        }
+        this.closeDeleteModal();
+        this.loadTransactions();
+      },
+      error: (error) => { this.closeDeleteModal(); alert(`Error: ${error.error?.message || 'Failed to delete transaction(s)'}`); }
+    });
+  }
+
+  openPayModal(transaction: Transaction): void {
+    this.payModalTransaction = transaction;
+    // collect future installments (same installmentGroupId and installmentNumber > current)
+    if (transaction.installmentGroupId) {
+      this.payModalFutureInstallments = this.transactions
+        .filter(t => t.installmentGroupId === transaction.installmentGroupId && (t.installmentNumber || 0) > (transaction.installmentNumber || 0))
+        .sort((a,b) => (a.installmentNumber || 0) - (b.installmentNumber || 0));
+    } else {
+      this.payModalFutureInstallments = [];
+    }
+
+    this.showPayModal = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closePayModal(): void {
+    this.showPayModal = false;
+    this.payModalTransaction = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  confirmPay(markPrevious: boolean): void {
+    if (!this.payModalTransaction) return;
+    const id = this.payModalTransaction.id;
+    this.transactionService.payInstallmentEarly(id, markPrevious).subscribe({
+      next: () => { this.closePayModal(); this.loadTransactions(); },
+      error: (error) => { this.closePayModal(); alert(`Error: ${error.error?.message || 'Failed to pay installment early'}`); }
+    });
   }
 
   getCategoryColor(category: string): string {
@@ -223,19 +309,65 @@ export class TransactionsComponent implements OnInit {
       const matchesSearch = t.description.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchesCategory = this.selectedCategory === 'All categories' || t.category === this.selectedCategory;
       const matchesType = t.type === this.selectedType;
-      return matchesSearch && matchesCategory && matchesType;
+      // month filter (t.rawDate expected as ISO date string)
+      let matchesMonth = true;
+      if (this.selectedMonth) {
+        try {
+          const [y, m] = this.selectedMonth.split('-').map(Number);
+          const td = new Date(t.rawDate || t.date);
+          matchesMonth = td.getFullYear() === y && (td.getMonth() + 1) === m;
+        } catch {
+          matchesMonth = true;
+        }
+      }
+      return matchesSearch && matchesCategory && matchesType && matchesMonth;
     });
   }
 
-  switchType(type: 'Credit' | 'Debit'): void {
-    if (this.selectedType !== type) {
-      this.isAnimating = true;
-      setTimeout(() => {
-        this.selectedType = type;
-        this.loadTransactions(); // Reload transactions for the new type
-        this.isAnimating = false;
-      }, 150);
-    }
+  switchType(type: 'Credit' | 'Debit' | 'Income'): void {
+    if (this.selectedType === type) return;
+    this.selectedType = type;
+    this.loadTransactions();
+  }
+
+  onMonthChange(): void {
+    // reload transactions for the new month (server may ignore month filter; client filters too)
+    this.loadTransactions();
+  }
+
+  openMonthPicker(): void {
+    this.showMonthPicker = true;
+  }
+
+  closeMonthPicker(): void {
+    this.showMonthPicker = false;
+  }
+
+  selectMonthIndex(monthIndex: number): void {
+    // monthIndex is 0-based
+    const year = this.selectedMonth ? Number(this.selectedMonth.split('-')[0]) : new Date().getFullYear();
+    const mm = String(monthIndex + 1).padStart(2, '0');
+    this.selectedMonth = `${year}-${mm}`;
+    this.showMonthPicker = false;
+    this.onMonthChange();
+  }
+
+  getSelectedMonthLabel(): string {
+    if (!this.selectedMonth) return '';
+    const [y, m] = this.selectedMonth.split('-').map(Number);
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return `${monthNames[m - 1]} ${y}`;
+  }
+
+  getPickerYear(): number {
+    if (this.selectedMonth) return Number(this.selectedMonth.split('-')[0]);
+    return new Date().getFullYear();
+  }
+
+  isSelectedMonthIndex(i: number): boolean {
+    if (!this.selectedMonth) return false;
+    const [y, m] = this.selectedMonth.split('-').map(Number);
+    return y === this.getPickerYear() && m === (i + 1);
   }
 
   trackByTransactionId(index: number, transaction: Transaction): string {

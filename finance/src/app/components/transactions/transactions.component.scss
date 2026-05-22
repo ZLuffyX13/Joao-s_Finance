@@ -163,6 +163,7 @@
 		color: rgba(245, 245, 245, 0.4);
 		font-size: 0.8rem;
 		pointer-events: none;
+		transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), color 0.28s ease;
 	}
 }
 
@@ -176,7 +177,7 @@
 	font-size: 0.9rem;
 	font-weight: 500;
 	cursor: pointer;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: transform 240ms cubic-bezier(0.2,0,0.2,1), box-shadow 240ms ease, border-color 240ms ease, background 240ms ease;
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -191,7 +192,20 @@
 		background: #121212;
 		border-color: #45e0a1;
 		box-shadow: 0 0 12px rgba(69, 224, 161, 0.2);
-		animation: categoryPulse 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		/* subtle focus lift handled by wrapper :focus-within for smoother experience */
+	}
+
+	&:focus,
+	&:active {
+		transform: translateY(-3px) scale(1.01);
+		box-shadow: 0 12px 28px rgba(69,224,161,0.12);
+		border-color: #45e0a1;
+	}
+
+	&:focus + .category-icon,
+	&:active + .category-icon {
+		transform: translateY(-50%) rotate(180deg);
+		color: #45e0a1;
 	}
 
 	&::selection {
@@ -213,6 +227,74 @@
 
 	@media (max-width: 768px) {
 		width: 100%;
+	}
+
+	&.all-selected {
+				transform: translateY(-2px);
+				box-shadow: 0 6px 20px rgba(69,224,161,0.12);
+				border-color: #45e0a1;
+	}
+}
+
+/* When the wrapper has focus (native select opened or focused), animate smoothly */
+.category-wrapper:focus-within .category-filter {
+	transform: translateY(-3px) scale(1.01);
+	box-shadow: 0 12px 28px rgba(69,224,161,0.12);
+	border-color: #45e0a1;
+}
+
+.category-wrapper:focus-within .category-icon {
+	transform: translateY(-50%) rotate(180deg);
+	color: #45e0a1;
+}
+
+/* Compact pay modal buttons */
+.pay-modal-body {
+	.form-actions {
+		gap: 8px;
+		button {
+			padding: 8px 10px;
+			font-size: 0.9rem;
+			border-radius: 6px;
+		}
+		.btn-submit {
+			padding: 8px 12px;
+		}
+	}
+
+	.future-preview {
+		margin: 12px 0 8px 0;
+
+		h4 {
+			margin: 0 0 8px 0;
+			font-size: 0.95rem;
+			color: #f5f5f5;
+			font-weight: 700;
+		}
+
+		.future-list {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			max-height: 160px;
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+
+			li {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				font-size: 0.85rem;
+				color: rgba(245,245,245,0.85);
+
+				.fi-num { font-weight: 700; width: 90px; }
+				.fi-desc { flex: 1; color: rgba(245,245,245,0.75); }
+				.fi-date { width: 120px; color: rgba(245,245,245,0.6); }
+				.fi-amount { width: 110px; text-align: right; font-weight: 700; }
+			}
+		}
 	}
 }
 
@@ -881,4 +963,145 @@
 	50% {
 		box-shadow: 0 0 20px rgba(69, 224, 161, 0.4);
 	}
+}
+
+.month-picker {
+	flex: 0 0 180px;
+	display: flex;
+	align-items: center;
+
+	.month-open-btn {
+		width: 100%;
+		padding: 10px 14px;
+		background: rgba(18,18,18,0.98);
+		border: 1px solid rgba(255,255,255,0.06);
+		color: #f5f5f5;
+		border-radius: 8px;
+		font-size: 0.95rem;
+		font-weight: 400;
+		text-align: center;
+		cursor: pointer;
+		transition: all 0.18s ease;
+	}
+
+	.month-open-btn:hover {
+		background: rgba(69,224,161,0.06);
+		border-color: rgba(69,224,161,0.16);
+		box-shadow: 0 6px 20px rgba(69,224,161,0.06);
+	}
+
+	.month-open-btn:focus {
+		outline: none;
+		box-shadow: 0 0 12px rgba(69,224,161,0.14);
+	}
+
+	/* fallback hidden native input retained for accessibility */
+	input[type="month"] { display: none; }
+
+	input[type="month"]:focus {
+		outline: none;
+		border-color: #45e0a1;
+		box-shadow: 0 0 10px rgba(69,224,161,0.12);
+	}
+
+	@media (max-width: 768px) {
+		flex: 1 1 100%;
+		input[type="month"] { width: 100%; }
+	}
+}
+
+/* Month picker overlay */
+.month-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1200;
+	animation: overlayFadeIn 180ms ease forwards;
+}
+
+.month-menu {
+	background: linear-gradient(180deg, rgba(20,20,20,0.98), rgba(14,14,14,0.98));
+	border: 1px solid rgba(255,255,255,0.06);
+	padding: 18px;
+	border-radius: 12px;
+	width: min(720px, calc(100% - 40px));
+	box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+	transform-origin: center top;
+	animation: menuPopIn 240ms cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.month-menu-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+
+	h3 {
+		margin: 0;
+		color: #f5f5f5;
+		font-size: 1.1rem;
+		font-weight: 700;
+	}
+
+	.close-month {
+		background: transparent;
+		border: none;
+		color: rgba(245,245,245,0.7);
+		font-size: 1.1rem;
+		cursor: pointer;
+	}
+}
+
+.month-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 10px;
+}
+
+.month-option {
+	padding: 12px 10px;
+	border-radius: 8px;
+	background: rgba(255,255,255,0.02);
+	border: 1px solid rgba(255,255,255,0.04);
+	color: #f5f5f5;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.month-option:hover {
+	transform: translateY(-3px);
+	background: rgba(69,224,161,0.08);
+	border-color: rgba(69,224,161,0.14);
+}
+
+/* Highlight the currently selected month and today's month */
+.month-option.selected {
+  background: linear-gradient(135deg, #2fd19a 0%, #27c47d 100%);
+  color: #000;
+  border-color: rgba(69,224,161,0.9);
+}
+
+.month-option.current {
+  background: rgba(69,224,161,0.12);
+  border-color: rgba(69,224,161,0.22);
+  color: #45e0a1;
+}
+
+@media (max-width: 768px) {
+	.month-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@keyframes overlayFadeIn {
+	from { background: rgba(0,0,0,0); }
+	to { background: rgba(0,0,0,0.6); }
+}
+
+@keyframes menuPopIn {
+	0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+	60% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+	100% { opacity: 1; transform: translateY(0) scale(1); }
 }
